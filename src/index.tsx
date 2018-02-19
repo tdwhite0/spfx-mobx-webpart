@@ -1,12 +1,9 @@
-
-import { observable, ObservableMap, autorun } from 'mobx';
-import * as React from "react";
+import { observable, ObservableMap } from 'mobx';
+import { Provider } from 'mobx-react';
+import * as React from 'react';
 import * as ReactDom from 'react-dom';
-import { Provider } from "mobx-react";
-import { extend } from "@microsoft/sp-lodash-subset";
 
 export type Constructor<T = any> = new (...args: any[]) => T;
-export type WP<T = any> = new () => T;
 
 export class WebpartStore {
     @observable public properties = observable.map();
@@ -22,7 +19,6 @@ export class Store implements IStore {
 
 export function makeObservableWebPart<TBase extends Constructor>(Base: TBase) {
     return class extends Base {
-        timestamp = Date.now();
 
         public store: Store = new Store();
 
@@ -69,7 +65,7 @@ export function connectWebPartWithReactComponent<TBase extends Constructor>(Base
             }
 
             ReactDom.render(
-                <Provider { ...this.store }>
+                <Provider {...this.store}>
                     <Component />
                 </Provider>, this.domElement);
         }
@@ -90,14 +86,10 @@ export function connectWebPartWithReactComponent<TBase extends Constructor>(Base
     }
 }
 
-
 export function withPropertyPaneConfig<TBase extends Constructor>(Base: TBase, propertyPaneConfig) {
     return class extends Base {
 
-        _propertyPaneConfig = observable.map();
-
         constructor(...args: any[]) {
-
             super(...args);
         }
 
