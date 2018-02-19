@@ -3,11 +3,14 @@ import { observable, ObservableMap, autorun } from 'mobx';
 import * as React from "react";
 import * as ReactDom from 'react-dom';
 import { Provider } from "mobx-react";
+import { extend } from "@microsoft/sp-lodash-subset";
 
 export type Constructor<T = any> = new (...args: any[]) => T;
+export type WP<T = any> = new () => T;
 
 export class WebpartStore {
     @observable public properties = observable.map();
+    @observable public context;
 }
 
 export interface IStore {
@@ -17,7 +20,7 @@ export class Store implements IStore {
     public webpart = new WebpartStore();
 }
 
-export function ObservableWebPart<TBase extends Constructor>(Base: TBase) {
+export function makeObservableWebPart<TBase extends Constructor>(Base: TBase) {
     return class extends Base {
         timestamp = Date.now();
 
@@ -45,7 +48,7 @@ export function ObservableWebPart<TBase extends Constructor>(Base: TBase) {
     }
 }
 
-export function ObservableWebPartWithReactComponent<TBase extends Constructor>(Base: TBase, Component) {
+export function connectWebPartWithReactComponent<TBase extends Constructor>(Base: TBase, Component) {
     return class extends Base {
 
         public store: Store = new Store();
@@ -66,7 +69,7 @@ export function ObservableWebPartWithReactComponent<TBase extends Constructor>(B
             }
 
             ReactDom.render(
-                <Provider stores={{ webpart: this.store }}>
+                <Provider { ...this.store }>
                     <Component />
                 </Provider>, this.domElement);
         }
@@ -75,7 +78,7 @@ export function ObservableWebPartWithReactComponent<TBase extends Constructor>(B
             return super.onInit().then(() => {
                 this.store.webpart.properties.clear();
                 this.store.webpart.properties.merge(this.properties as {});
-
+                this.store.webpart.context = observable(this.context);
                 return Promise.resolve(true);
             });
         }
@@ -83,6 +86,27 @@ export function ObservableWebPartWithReactComponent<TBase extends Constructor>(B
         onPropertyPaneFieldChanged(targetProperty, oldValue, newValue) {
             this.store.webpart.properties.set(targetProperty, newValue);
             return super.onPropertyPaneFieldChanged(targetProperty, oldValue, newValue);
+        }
+    }
+}
+
+
+export function withPropertyPaneConfig<TBase extends Constructor>(Base: TBase, propertyPaneConfig) {
+    return class extends Base {
+
+        _propertyPaneConfig = observable.map();
+
+        constructor(...args: any[]) {
+
+            super(...args);
+        }
+
+        getPropertyPaneConfiguration() {
+            const previousItems = super.getPropertyPaneConfiguration();
+            propertyPaneConfig.pages.forEach((page) => {
+                previousItems.pages.push(page);
+            })
+            return previousItems;
         }
     }
 }

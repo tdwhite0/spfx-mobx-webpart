@@ -1,6 +1,6 @@
 {
   "name": "spfx-mobx-webpart",
-  "version": "0.0.0",
+  "version": "0.0.2",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@microsoft/sp-lodash-subset": "^1.4.1",
     "mobx": "^3.5.1",
     "mobx-react": "^4.4.2"
   }
